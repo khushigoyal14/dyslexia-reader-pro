@@ -18,7 +18,6 @@ class DyslexiaReaderApp:
         
         self.is_speaking = False
         
-        # Mapping names to dyslexia-friendly hex color codes
         self.color_palette = {
             "Standard White": "#FFFFFF",
             "Soft Cream": "#FFFDD0",
@@ -62,6 +61,12 @@ class DyslexiaReaderApp:
         
         # Audio Engine Controls
         tk.Label(self.sidebar, text="Assistive Audio Engine", font=("Arial", 11, "bold"), bg="#EAECEE").pack(pady=(20,5))
+        
+        tk.Label(self.sidebar, text="Speech Speed (WPM):", bg="#EAECEE").pack(pady=(5,2))
+        self.speed_slider = tk.Scale(self.sidebar, from_=100, to=300, orient=tk.HORIZONTAL, bg="#EAECEE", bd=0)
+        self.speed_slider.set(200)  # 200 Words Per Minute is the default standard speed
+        self.speed_slider.pack(pady=5, fill=tk.X, padx=20)
+        
         self.play_button = tk.Button(self.sidebar, text="▶ Read & Track", command=self.start_read_thread, bg="#27AE60", fg="white", relief=tk.FLAT)
         self.play_button.pack(fill=tk.X, padx=20, pady=5)
 
@@ -81,7 +86,6 @@ class DyslexiaReaderApp:
         self.text_area.configure(font=(chosen_font, chosen_size))
 
     def update_background_color(self, *args):
-        """Dynamically switches the text area background to improve visual contrast balance."""
         selected_tone = self.color_var.get()
         target_hex = self.color_palette.get(selected_tone, "#FFFFFF")
         self.text_area.configure(bg=target_hex)
@@ -106,11 +110,17 @@ class DyslexiaReaderApp:
                 self.is_speaking = True
                 self.play_button.config(state=tk.DISABLED)
                 
-                audio_thread = threading.Thread(target=self.speech_tracking_loop, args=(raw_text,), daemon=True)
+                # Safely capture the speech rate from the main thread slider value
+                chosen_speed = self.speed_slider.get()
+                
+                audio_thread = threading.Thread(target=self.speech_tracking_loop, args=(raw_text, chosen_speed), daemon=True)
                 audio_thread.start()
 
-    def speech_tracking_loop(self, text_to_speak):
+    def speech_tracking_loop(self, text_to_speak, current_speed):
         engine = pyttsx3.init()
+        
+        # Set the dynamic words-per-minute rate to match the slider value
+        engine.setProperty('rate', current_speed)
         
         def on_word(name, location, length):
             start_idx = f"1.0 + {location} chars"
