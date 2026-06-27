@@ -21,3 +21,8 @@ A desktop accessibility application built with Python and Tkinter designed to as
 2. Install the necessary library requirements:
    ```bash
    pip install -r requirements.txt
+
+## Application Walkthrough
+* See the features of the application in action below:
+https://github.com/user-attachments/assets/6dd4c8f7-91ed-437b-bbff-cc2547872162
+
