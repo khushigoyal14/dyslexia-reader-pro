@@ -18,6 +18,14 @@ class DyslexiaReaderApp:
         
         self.is_speaking = False
         
+        # Mapping names to dyslexia-friendly hex color codes
+        self.color_palette = {
+            "Standard White": "#FFFFFF",
+            "Soft Cream": "#FFFDD0",
+            "Pastel Blue": "#E6F2FF",
+            "Sage Green": "#E8F5E9"
+        }
+        
         self.setup_ui()
 
     def setup_ui(self):
@@ -39,6 +47,15 @@ class DyslexiaReaderApp:
         self.size_slider.set(config.DEFAULT_SIZE)
         self.size_slider.pack(pady=5, fill=tk.X, padx=20)
 
+        # Accessibility Visual Theme Settings
+        tk.Label(self.sidebar, text="Visual Accessibility", font=("Arial", 11, "bold"), bg="#EAECEE").pack(pady=(20,5))
+        
+        tk.Label(self.sidebar, text="Background Tone:", bg="#EAECEE").pack(pady=(5,2))
+        self.color_var = tk.StringVar(value="Standard White")
+        self.color_dropdown = ttk.Combobox(self.sidebar, textvariable=self.color_var, values=list(self.color_palette.keys()), state="readonly")
+        self.color_dropdown.pack(pady=5)
+        self.color_dropdown.bind("<<ComboboxSelected>>", self.update_background_color)
+
         # Document Ingestion
         tk.Label(self.sidebar, text="Document Ingestion", font=("Arial", 11, "bold"), bg="#EAECEE").pack(pady=(20,5))
         tk.Button(self.sidebar, text="Upload Image (OCR)", command=self.upload_image, bg="#34495E", fg="white", relief=tk.FLAT).pack(fill=tk.X, padx=20, pady=5)
@@ -49,7 +66,7 @@ class DyslexiaReaderApp:
         self.play_button.pack(fill=tk.X, padx=20, pady=5)
 
         # Right Text Workspace Panel
-        self.text_area = tk.Text(self.root, wrap=tk.WORD, bg=config.DEFAULT_BG, fg=config.DEFAULT_FG, padx=30, pady=30, insertbackground=config.DEFAULT_FG, bd=0)
+        self.text_area = tk.Text(self.root, wrap=tk.WORD, bg="#FFFFFF", fg=config.DEFAULT_FG, padx=30, pady=30, insertbackground=config.DEFAULT_FG, bd=0)
         self.text_area.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True)
         
         # Highlighting tag configuration
@@ -62,6 +79,12 @@ class DyslexiaReaderApp:
         chosen_font = self.font_var.get()
         chosen_size = self.size_slider.get()
         self.text_area.configure(font=(chosen_font, chosen_size))
+
+    def update_background_color(self, *args):
+        """Dynamically switches the text area background to improve visual contrast balance."""
+        selected_tone = self.color_var.get()
+        target_hex = self.color_palette.get(selected_tone, "#FFFFFF")
+        self.text_area.configure(bg=target_hex)
 
     def upload_image(self):
         file_path = filedialog.askopenfilename(filetypes=[("Image Files", "*.png *.jpg *.jpeg *.bmp")])
@@ -77,7 +100,6 @@ class DyslexiaReaderApp:
 
     def start_read_thread(self):
         if not self.is_speaking:
-            # Safely capture the text data on the main thread before launching the background process
             raw_text = self.text_area.get("1.0", tk.END).strip()
             
             if raw_text:
